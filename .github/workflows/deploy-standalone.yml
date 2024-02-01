@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   deploy:
-    name: deploy jawn
+    name: deploy standalone pd node, preview
     permissions:
       contents: 'read'
       id-token: 'write'
@@ -26,10 +26,16 @@ jobs:
         run: |-
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          echo ${{ secrets.CI_RUNNER_SSH_PRIVKEY }} > ~/.ssh/id_ed25519
-          # TODO host key mgmt
+          echo "$SSH_PRIVKEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          echo "$SSH_HOSTKEYS" > ~/.ssh/known_hosts
+        env:
+          SSH_PRIVKEY: ${{ secrets.CI_RUNNER_SSH_PRIVKEY }}
+          SSH_HOSTKEYS: ${{ secrets.CI_RUNNER_SSH_HOSTKEYS }}
 
       - name: deploy
+        shell: bash
         run: |-
-          # TODO: iterate on this workflow in a separate PR. need the base in main first.
+          export PENUMBRA_VERSION="main"
+          export PENUMBRA_ENVIRONMENT="penumbra-preview"
           ./deployments/scripts/redeploy-ci-fullnode-via-runner
